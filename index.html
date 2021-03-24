@@ -1,0 +1,153 @@
+<html lang="ja">
+
+<script>
+
+	function rect_mode_change(rect_mode) {
+		let mode = document.getElementById(rect_mode);
+		radioNodeList = mode.elements['rect_mode'];
+		let checkValue = radioNodeList.value;
+		switch (checkValue) {
+			case 'rect':
+				rect_mask_mode = 0;
+				break;
+			case 'bg':
+				rect_mask_mode = 1;
+				break;
+			case 'fg':
+				rect_mask_mode = 2;
+				console.log(rect_mask_mode)
+				break;
+			default:
+				console.log('Sorry, we are out of ${expr}.');
+		}
+	}
+
+	function load_to_canvas(files, canvas_1, canvas_2) {
+		canvas1 = document.getElementById(canvas_1);
+		canvas2 = document.getElementById(canvas_2);
+
+		canvas1.addEventListener('mousemove', onMove, false);
+		canvas1.addEventListener('mousedown', onClick, false);
+
+		let ctx1 = canvas1.getContext('2d');
+		let ctx2 = canvas2.getContext('2d');
+		let reader = new FileReader();
+		reader.onload = function (event) {
+			let image = new Image();
+			image.onload = function () {
+				canvas1.width = image.naturalWidth;
+				canvas1.height = image.naturalHeight;
+				window_w = canvas1.width;
+				window_h = canvas1.height;
+				canvas2.width = image.naturalWidth;
+				canvas2.height = image.naturalHeight;
+				ctx1.drawImage(image, 0, 0);
+				ctx2.drawImage(image, 0, 0);
+				image_copy = image
+			}
+			image.src = event.target.result;
+		}
+		reader.readAsDataURL(files[0]);
+	}
+
+	let canvas1
+	let canvas2
+	let window_x = 0;
+	let window_y = 0;
+	let window_w = 0;
+	let window_h = 0;
+	let click_x = 0;
+	let click_y = 0;
+	let image_copy
+
+	let rect_mask_mode = 0;	// 0 -> rect; 1 -> mask bg; 2 -> mask fg
+
+
+	//マウス動いていて、かつ左クリック時に発火。
+	function onMove(e) {
+		if (e.buttons == 1) {
+			if (rect_mask_mode == 0) {
+				let ctx = canvas1.getContext('2d');
+				let rect = e.target.getBoundingClientRect();
+				let mouse_x = e.clientX - rect.left
+				let mouse_y = e.clientY - rect.top
+
+				window_x = Math.min(click_x, mouse_x)
+				window_y = Math.min(click_y, mouse_y)
+				window_w = Math.abs(click_x - mouse_x)
+				window_h = Math.abs(click_y - mouse_y)
+
+				ctx.clearRect(0, 0, canvas1.width, canvas1.height);
+				ctx.drawImage(image_copy, 0, 0)
+				ctx.strokeStyle = "rgb(0, 0, 255)";
+				ctx.strokeRect(window_x, window_y, window_w, window_h);
+			}
+			else {
+				let ctx = canvas1.getContext('2d');
+				let rect = e.target.getBoundingClientRect();
+				let cx = e.clientX - rect.left;
+				let cy = e.clientY - rect.top;
+				let radius = 1;
+				
+				
+				if (rect_mask_mode == 1) {
+					ctx.strokeStyle = "rgb(0, 0, 0)";
+				}
+				else if (rect_mask_mode == 2) {
+					ctx.strokeStyle = "rgb(255, 255, 255)";
+				}
+				ctx.beginPath();
+				ctx.arc(cx, cy, radius, 0, 2 * Math.PI, true);
+				ctx.fill();
+			}
+		}
+	};
+
+	function onClick(e) {
+		if (canvas1.getContext) {
+			if (e.buttons == 1) {	//左クリック
+				if (rect_mask_mode == 0) {
+					let ctx = canvas1.getContext('2d');
+					let rect = e.target.getBoundingClientRect();
+					click_x = e.clientX - rect.left
+					click_y = e.clientY - rect.top
+				}
+				else {
+					let ctx = canvas1.getContext('2d');
+					let rect = e.target.getBoundingClientRect();
+					let cx = e.clientX - rect.left;
+					let cy = e.clientY - rect.top;
+					let radius = 1;
+					
+					if (rect_mask_mode == 1) {
+						ctx.strokeStyle = "rgb(0, 0, 0)";
+						ctx.fillStyle = "rgb(0, 0, 0)";
+					}
+					else if (rect_mask_mode == 2) {
+						ctx.strokeStyle = "rgb(255, 255, 255)";
+						ctx.fillStyle = "rgb(255, 255, 255)";
+					}
+					ctx.beginPath();
+					ctx.arc(cx, cy, radius, 0, 2 * Math.PI, true);
+					ctx.fill();
+				}
+			}
+		}
+	};
+
+</script>
+
+<body>
+	<input type="file" accept="image/png, image/jpeg"
+		onChange="load_to_canvas(this.files, 'canvas1', 'canvas2')"></input>
+	<br>
+	<form id="rect_mode_form" onChange="rect_mode_change('rect_mode_form')">
+		<label><input name="rect_mode" type="radio" value="rect" checked> 矩形</label>
+		<label><input name="rect_mode" type="radio" value="bg"> 背景</label>
+		<label><input name="rect_mode" type="radio" value="fg"> 前景</label>
+	</form>
+	<canvas id="canvas1"></canvas>
+	<canvas id="canvas2"></canvas>
+</body>
+
+</html>
