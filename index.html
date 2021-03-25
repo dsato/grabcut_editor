@@ -22,7 +22,7 @@
 		}
 	}
 
-	function load_to_canvas(files, canvas_1, canvas_2) {
+	function load_to_canvas(files, img_1, canvas_1, canvas_2) {
 		canvas1 = document.getElementById(canvas_1);
 		canvas2 = document.getElementById(canvas_2);
 
@@ -30,24 +30,31 @@
 		canvas1.addEventListener('mousedown', onClick, false);
 
 		let ctx1 = canvas1.getContext('2d');
-		let ctx2 = canvas2.getContext('2d');
 		let reader = new FileReader();
-		reader.onload = function (event) {
-			let image = new Image();
+		let image = new Image();
+		reader.onloadend = function () {
+			image.src = reader.result;
 			image.onload = function () {
-				canvas1.width = image.naturalWidth;
-				canvas1.height = image.naturalHeight;
-				window_w = canvas1.width;
-				window_h = canvas1.height;
-				canvas2.width = image.naturalWidth;
-				canvas2.height = image.naturalHeight;
-				ctx1.drawImage(image, 0, 0);
-				ctx2.drawImage(image, 0, 0);
-				image_copy = image
+				canvas1.width = image.width;
+				canvas1.height = image.height;
+				canvas2.width = image.width;
+				canvas2.height = image.height;
+				window_w = image.width;
+				window_h = image.height;
+				canvas2.style.left = canvas1.width;
+				const black_img = new ImageData(canvas2.width, canvas2.height);
+				for (let i = 0, n = black_img.data.length; i < n; i += 4) {
+					black_img.data[i+3] = 255
+				}
+				ctx = canvas2.getContext("2d");
+				ctx.putImageData(black_img, 0, 0);
 			}
-			image.src = event.target.result;
+			document.getElementById(img_1).setAttribute('src', event.target.result);
+
 		}
 		reader.readAsDataURL(files[0]);
+		
+
 	}
 
 	let canvas1
@@ -62,8 +69,6 @@
 
 	let rect_mask_mode = 0;	// 0 -> rect; 1 -> mask bg; 2 -> mask fg
 
-
-	//マウス動いていて、かつ左クリック時に発火。
 	function onMove(e) {
 		if (e.buttons == 1) {
 			if (rect_mask_mode == 0) {
@@ -78,7 +83,7 @@
 				window_h = Math.abs(click_y - mouse_y)
 
 				ctx.clearRect(0, 0, canvas1.width, canvas1.height);
-				ctx.drawImage(image_copy, 0, 0)
+				//ctx.drawImage(image_copy, 0, 0)
 				ctx.strokeStyle = "rgb(0, 0, 255)";
 				ctx.strokeRect(window_x, window_y, window_w, window_h);
 			}
@@ -136,18 +141,40 @@
 	};
 
 </script>
+<style>
+	#container {
+		position: relative;
+	}
+    #img1 {
+		position: absolute;
+    	z-index: 1;
+
+    }
+    #canvas1 {
+		position: absolute;
+    	z-index: 2;
+    }
+	#canvas2 {
+		position: absolute;
+	}
+</style>
 
 <body>
 	<input type="file" accept="image/png, image/jpeg"
-		onChange="load_to_canvas(this.files, 'canvas1', 'canvas2')"></input>
+		onChange="load_to_canvas(this.files, 'img1', 'canvas1', 'canvas2')"></input>
 	<br>
 	<form id="rect_mode_form" onChange="rect_mode_change('rect_mode_form')">
-		<label><input name="rect_mode" type="radio" value="rect" checked> 矩形</label>
-		<label><input name="rect_mode" type="radio" value="bg"> 背景</label>
-		<label><input name="rect_mode" type="radio" value="fg"> 前景</label>
+		<label><input name="rect_mode" type="radio" value="rect" checked>矩形</label>
+		<label><input name="rect_mode" type="radio" value="bg">背景</label>
+		<label><input name="rect_mode" type="radio" value="fg">前景</label>
+		
 	</form>
-	<canvas id="canvas1"></canvas>
-	<canvas id="canvas2"></canvas>
+	<button id="upload_button">grab cut!</button>
+	<div id="container">
+		<img id="img1"></img>
+		<canvas id="canvas1"></canvas>
+		<canvas id="canvas2"></canvas>
+	</div>
 </body>
 
 </html>
