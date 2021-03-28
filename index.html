@@ -22,32 +22,45 @@
 		}
 	}
 
-	function load_to_canvas(files, img_1, canvas_1, canvas_2) {
-		canvas1 = document.getElementById(canvas_1);
+	function load_to_canvas(files, img_1, canvas_1_1, canvas_1_2, canvas_2) {
+		canvas1_1 = document.getElementById(canvas_1_1);
+		canvas1_2 = document.getElementById(canvas_1_2);
 		canvas2 = document.getElementById(canvas_2);
 
-		canvas1.addEventListener('mousemove', onMove, false);
-		canvas1.addEventListener('mousedown', onClick, false);
+		canvas1_2.addEventListener('mousemove', onMove, false);
+		canvas1_2.addEventListener('mousedown', onClick, false);
 
-		let ctx1 = canvas1.getContext('2d');
 		let reader = new FileReader();
 		let image = new Image();
-		reader.onloadend = function () {
+		reader.onloadend = function (event) {
 			image.src = reader.result;
 			image.onload = function () {
-				canvas1.width = image.width;
-				canvas1.height = image.height;
+				canvas1_1.width = image.width;
+				canvas1_1.height = image.height;
+				canvas1_2.width = image.width;
+				canvas1_2.height = image.height;
 				canvas2.width = image.width;
 				canvas2.height = image.height;
 				window_w = image.width;
 				window_h = image.height;
-				canvas2.style.left = canvas1.width;
+				canvas2.style.left = canvas1_2.width;
+				//const gray_img = new ImageData(canvas1_2.width, canvas1_2.height);
+				//for (let i = 0, n = gray_img.data.length; i < n; i += 4) {
+				//	gray_img.data[i] = 128;
+				//	gray_img.data[i+1] = 128;
+				//	gray_img.data[i+2] = 128;
+				//	gray_img.data[i+3] = 0;
+				//}
+				//let ctx = canvas1_2.getContext("2d");
+				//ctx.putImageData(gray_img, 0, 0);
+
 				const black_img = new ImageData(canvas2.width, canvas2.height);
 				for (let i = 0, n = black_img.data.length; i < n; i += 4) {
-					black_img.data[i+3] = 255
+					black_img.data[i+3] = 255;
 				}
 				ctx = canvas2.getContext("2d");
 				ctx.putImageData(black_img, 0, 0);
+				image_copy = image.src
 			}
 			document.getElementById(img_1).setAttribute('src', event.target.result);
 
@@ -56,8 +69,9 @@
 		
 
 	}
-
-	let canvas1
+	const API_SERVER = 'https://awh.tiby.work:1443';
+	let canvas1_1
+	let canvas1_2
 	let canvas2
 	let window_x = 0;
 	let window_y = 0;
@@ -69,64 +83,25 @@
 
 	let rect_mask_mode = 0;	// 0 -> rect; 1 -> mask bg; 2 -> mask fg
 
-	function onMove(e) {
-		if (e.buttons == 1) {
-			if (rect_mask_mode == 0) {
-				let ctx = canvas1.getContext('2d');
-				let rect = e.target.getBoundingClientRect();
-				let mouse_x = e.clientX - rect.left
-				let mouse_y = e.clientY - rect.top
-
-				window_x = Math.min(click_x, mouse_x)
-				window_y = Math.min(click_y, mouse_y)
-				window_w = Math.abs(click_x - mouse_x)
-				window_h = Math.abs(click_y - mouse_y)
-
-				ctx.clearRect(0, 0, canvas1.width, canvas1.height);
-				//ctx.drawImage(image_copy, 0, 0)
-				ctx.strokeStyle = "rgb(0, 0, 255)";
-				ctx.strokeRect(window_x, window_y, window_w, window_h);
-			}
-			else {
-				let ctx = canvas1.getContext('2d');
-				let rect = e.target.getBoundingClientRect();
-				let cx = e.clientX - rect.left;
-				let cy = e.clientY - rect.top;
-				let radius = 1;
-				
-				
-				if (rect_mask_mode == 1) {
-					ctx.strokeStyle = "rgb(0, 0, 0)";
-				}
-				else if (rect_mask_mode == 2) {
-					ctx.strokeStyle = "rgb(255, 255, 255)";
-				}
-				ctx.beginPath();
-				ctx.arc(cx, cy, radius, 0, 2 * Math.PI, true);
-				ctx.fill();
-			}
-		}
-	};
-
 	function onClick(e) {
-		if (canvas1.getContext) {
+		if (canvas1_2.getContext) {
 			if (e.buttons == 1) {	//左クリック
 				if (rect_mask_mode == 0) {
-					let ctx = canvas1.getContext('2d');
+					let ctx = canvas1_1.getContext('2d');
 					let rect = e.target.getBoundingClientRect();
 					click_x = e.clientX - rect.left
 					click_y = e.clientY - rect.top
 				}
 				else {
-					let ctx = canvas1.getContext('2d');
+					let ctx = canvas1_2.getContext('2d');
 					let rect = e.target.getBoundingClientRect();
 					let cx = e.clientX - rect.left;
 					let cy = e.clientY - rect.top;
 					let radius = 1;
 					
 					if (rect_mask_mode == 1) {
-						ctx.strokeStyle = "rgb(0, 0, 0)";
-						ctx.fillStyle = "rgb(0, 0, 0)";
+						ctx.strokeStyle = "rgb(30, 30, 30)";
+						ctx.fillStyle = "rgb(30, 30, 30)";
 					}
 					else if (rect_mask_mode == 2) {
 						ctx.strokeStyle = "rgb(255, 255, 255)";
@@ -139,6 +114,92 @@
 			}
 		}
 	};
+	function onMove(e) {
+		if (e.buttons == 1) {
+			if (rect_mask_mode == 0) {
+				let ctx = canvas1_1.getContext('2d');
+				let rect = e.target.getBoundingClientRect();
+				let mouse_x = e.clientX - rect.left
+				let mouse_y = e.clientY - rect.top
+
+				window_x = Math.min(click_x, mouse_x)
+				window_y = Math.min(click_y, mouse_y)
+				window_w = Math.abs(click_x - mouse_x)
+				window_h = Math.abs(click_y - mouse_y)
+
+				ctx.clearRect(0, 0, canvas1_2.width, canvas1_2.height);
+				//ctx.drawImage(image_copy, 0, 0)
+				ctx.strokeStyle = "rgb(0, 0, 255)";
+				ctx.strokeRect(window_x, window_y, window_w, window_h);
+			}
+			else {
+				let ctx = canvas1_2.getContext('2d');
+				let rect = e.target.getBoundingClientRect();
+				let cx = e.clientX - rect.left;
+				let cy = e.clientY - rect.top;
+				let radius = 1;
+				
+				
+				if (rect_mask_mode == 1) {
+					ctx.strokeStyle = "rgb(30, 30, 30)";
+				}
+				else if (rect_mask_mode == 2) {
+					ctx.strokeStyle = "rgb(255, 255, 255)";
+				}
+				ctx.beginPath();
+				ctx.arc(cx, cy, radius, 0, 2 * Math.PI, true);
+				ctx.fill();
+			}
+		}
+	};
+
+	function send_data() {
+		if (canvas1_2) {
+			const origin_data = image_copy
+			const pic_data = canvas1_2.toDataURL("image/png");
+			const param = {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json; charset=utf-8"
+				},
+				body: JSON.stringify({origin_image:origin_data, mask_data:pic_data, wx:window_x, wy:window_y, ww:window_w, wh:window_h})
+			};
+			const url = API_SERVER + '/grab_cut';
+			sendServer(url, param);
+		}
+		else {
+			console.log('no picture loaded');
+		}
+	}
+
+	function sendServer(url, param) {
+		fetch(url, param)
+			.then((response) => {
+				return response.json();
+			})
+			.then((json) => {
+				if (json.status) {
+					alert("送信に『成功』しました");
+					//setImage(json.result);    //json.resultにはファイル名が入っている
+				}
+				else {
+					//alert("送信に『失敗』しました");
+					console.log('hogeshi');
+					let ctx = document.getElementById('canvas2').getContext('2d');
+					let img = new Image();
+					img.src = json.result;
+					img.onload = function() {
+						ctx.drawImage(img, 0, 0);
+					}
+				}
+			})
+			.catch((error) => {
+				alert("送信に『失敗』しました");
+				console.log(`[error2] ${error}`);
+			});
+	}
+
+	
 
 </script>
 <style>
@@ -150,9 +211,13 @@
     	z-index: 1;
 
     }
-    #canvas1 {
+	#canvas1_1 {
 		position: absolute;
-    	z-index: 2;
+		z-index: 2;
+	}
+    #canvas1_2 {
+		position: absolute;
+    	z-index: 3;
     }
 	#canvas2 {
 		position: absolute;
@@ -161,7 +226,7 @@
 
 <body>
 	<input type="file" accept="image/png, image/jpeg"
-		onChange="load_to_canvas(this.files, 'img1', 'canvas1', 'canvas2')"></input>
+		onChange="load_to_canvas(this.files, 'img1', 'canvas1_1', 'canvas1_2', 'canvas2')"></input>
 	<br>
 	<form id="rect_mode_form" onChange="rect_mode_change('rect_mode_form')">
 		<label><input name="rect_mode" type="radio" value="rect" checked>矩形</label>
@@ -169,10 +234,11 @@
 		<label><input name="rect_mode" type="radio" value="fg">前景</label>
 		
 	</form>
-	<button id="upload_button">grab cut!</button>
+	<button id="upload_button" onclick="send_data()">grab cut!</button>
 	<div id="container">
 		<img id="img1"></img>
-		<canvas id="canvas1"></canvas>
+		<canvas id="canvas1_1"></canvas>
+		<canvas id="canvas1_2"></canvas>
 		<canvas id="canvas2"></canvas>
 	</div>
 </body>
