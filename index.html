@@ -39,27 +39,19 @@
 				canvas1_1.height = image.height;
 				canvas1_2.width = image.width;
 				canvas1_2.height = image.height;
-				canvas2.width = image.width;
-				canvas2.height = image.height;
+				//canvas2.width = image.width;
+				//canvas2.height = image.height;
 				window_w = image.width;
 				window_h = image.height;
 				canvas2.style.left = canvas1_2.width;
-				//const gray_img = new ImageData(canvas1_2.width, canvas1_2.height);
-				//for (let i = 0, n = gray_img.data.length; i < n; i += 4) {
-				//	gray_img.data[i] = 128;
-				//	gray_img.data[i+1] = 128;
-				//	gray_img.data[i+2] = 128;
-				//	gray_img.data[i+3] = 0;
-				//}
-				//let ctx = canvas1_2.getContext("2d");
-				//ctx.putImageData(gray_img, 0, 0);
 
-				const black_img = new ImageData(canvas2.width, canvas2.height);
-				for (let i = 0, n = black_img.data.length; i < n; i += 4) {
-					black_img.data[i+3] = 255;
-				}
-				ctx = canvas2.getContext("2d");
-				ctx.putImageData(black_img, 0, 0);
+				//const black_img = new ImageData(canvas2.width, canvas2.height);
+				//for (let i = 0, n = black_img.data.length; i < n; i += 4) {
+				//	black_img.data[i+3] = 255;
+				//}
+				//ctx = canvas2.getContext("2d");
+				//ctx.putImageData(black_img, 0, 0);
+
 				image_copy = image.src
 			}
 			document.getElementById(img_1).setAttribute('src', event.target.result);
@@ -157,12 +149,14 @@
 		if (canvas1_2) {
 			const origin_data = image_copy
 			const pic_data = canvas1_2.toDataURL("image/png");
+			const reduct_noise = document.getElementById("noise").checked
+			console.log(reduct_noise)
 			const param = {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json; charset=utf-8"
 				},
-				body: JSON.stringify({origin_image:origin_data, mask_data:pic_data, wx:window_x, wy:window_y, ww:window_w, wh:window_h})
+				body: JSON.stringify({origin_image:origin_data, mask_data:pic_data, reduct_noise:reduct_noise, wx:window_x, wy:window_y, ww:window_w, wh:window_h})
 			};
 			const url = API_SERVER + '/grab_cut';
 			sendServer(url, param);
@@ -179,23 +173,25 @@
 			})
 			.then((json) => {
 				if (json.status) {
-					alert("送信に『成功』しました");
-					//setImage(json.result);    //json.resultにはファイル名が入っている
-				}
-				else {
-					//alert("送信に『失敗』しました");
 					console.log('hogeshi');
-					let ctx = document.getElementById('canvas2').getContext('2d');
+					canvas2 = document.getElementById('canvas2')
 					let img = new Image();
 					img.src = json.result;
+					let ctx = canvas2.getContext('2d');
 					img.onload = function() {
+						canvas2.width = img.width
+						canvas2.height = img.height
 						ctx.drawImage(img, 0, 0);
 					}
 				}
+				else {
+					console.log("送信に失敗しました");
+					
+				}
 			})
 			.catch((error) => {
-				alert("送信に『失敗』しました");
-				console.log(`[error2] ${error}`);
+				console.log("送信に失敗しました");
+				console.log(error);
 			});
 	}
 
@@ -235,6 +231,8 @@
 		
 	</form>
 	<button id="upload_button" onclick="send_data()">grab cut!</button>
+	<input type="checkbox" id="noise" name="noise" checked>
+	<label for="noise">ノイズ除去</label>
 	<div id="container">
 		<img id="img1"></img>
 		<canvas id="canvas1_1"></canvas>
