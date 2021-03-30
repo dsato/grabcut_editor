@@ -10,7 +10,6 @@
 	let window_h = 0;
 	let click_x = 0;
 	let click_y = 0;
-	let image_copy;
 	let file_name = "sample.png";
 	const API_SERVER = 'https://awh.tiby.work:1443';
 
@@ -61,7 +60,6 @@
 				window_w = image.width;
 				window_h = image.height;
 				canvas2.style.left = canvas1_2.width;
-				image_copy = image.src
 			}
 			document.getElementById(img_1).setAttribute('src', event.target.result);
 
@@ -172,7 +170,7 @@
 			const origin_size = document.getElementById("origin_size");
 			if (origin_size.checked) output_image_size_mode = 1;
 
-			const origin_data = image_copy
+			const origin_data = document.getElementById("img1").src
 			const pic_data = canvas1_2.toDataURL("image/png");
 			const reduct_noise = document.getElementById("noise").checked
 			const param = {
@@ -218,8 +216,7 @@
 				upload_button.style.color = "black";
 			})
 			.catch((error) => {
-				console.log("送信に失敗しました");
-				console.log(error);
+				alert(error)
 			});
 	}
 
@@ -278,7 +275,7 @@
 		<label><input name="rect_mode" type="radio" value="erase">消しゴム</label>	
 	</form>
 	<button id="upload_button" onclick="send_data()">grab cut!</button>
-	<input type="checkbox" id="noise" name="noise" checked>
+	<input type="checkbox" id="noise" name="noise">
 	<label for="noise">ノイズ除去</label>
 	<input type="radio" id="rect_size" name="rect_or_origin" value="rect_size" checked>
     <label for="rect_size">矩形抽出</label>
