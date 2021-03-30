@@ -175,8 +175,6 @@
 			const origin_data = image_copy
 			const pic_data = canvas1_2.toDataURL("image/png");
 			const reduct_noise = document.getElementById("noise").checked
-			console.log(reduct_noise)
-			console.log(window_y)
 			const param = {
 				method: "POST",
 				headers: {
@@ -199,7 +197,6 @@
 			})
 			.then((json) => {
 				if (json.status) {
-					console.log('hogeshi');
 					canvas2 = document.getElementById('canvas2')
 					let img = new Image();
 					img.src = json.result;
